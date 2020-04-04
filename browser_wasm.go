@@ -27,27 +27,31 @@ func Terminate() error {
 
 func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Window, error) {
 	// THINK: Consider https://developer.mozilla.org/en-US/docs/Web/API/Window.open?
+	body := document.Get("body")
+	if body.Equal(js.Null()) {
+		body = document.Call("createElement", "body")
+		document.Set("body", body)
+		log.Println("Creating body, since it doesn't exist.")
+	}
 
-	// HACK: Go fullscreen?
-	width := js.Global().Get("innerWidth").Int()
-	height := js.Global().Get("innerHeight").Int()
+	body.Get("style").Call("setProperty", "margin", "0")
 
 	canvas := document.Call("createElement", "canvas")
+
+	body.Call("appendChild", canvas)
+
+	// HACK: Go fullscreen /* canvas being sized asynchronously, we are using body the window inner Width/Height */?
+	width := js.Global().Get("innerWidth").Int()
+	height := js.Global().Get("innerHeight").Int()
 
 	devicePixelRatio := js.Global().Get("devicePixelRatio").Float()
 	canvas.Set("width", int(float64(width)*devicePixelRatio+0.5))   // Nearest non-negative int.
 	canvas.Set("height", int(float64(height)*devicePixelRatio+0.5)) // Nearest non-negative int.
-	canvas.Get("style").Call("setProperty", "width", fmt.Sprintf("%vpx", width))
-	canvas.Get("style").Call("setProperty", "height", fmt.Sprintf("%vpx", height))
+	log.Println("Canvas: ", width, height, devicePixelRatio)
 
-	if document.Get("body").Equal(js.Null()) {
-		body := document.Call("createElement", "body")
-		document.Set("body", body)
-		log.Println("Creating body, since it doesn't exist.")
-	}
-	document.Get("body").Get("style").Call("setProperty", "margin", "0")
-	document.Get("body").Call("appendChild", canvas)
-
+	canvas.Get("style").Call("setProperty", "width", "100vw")
+	canvas.Get("style").Call("setProperty", "height", "100vh")
+	
 	document.Set("title", title)
 
 	// Use glfw hints.
@@ -96,22 +100,23 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 
 	js.Global().Call("addEventListener", "resize", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		// HACK: Go fullscreen?
-		width := js.Global().Get("innerWidth").Int()
-		height := js.Global().Get("innerHeight").Int()
+		width := canvas.Get("clientWidth").Int()
+		height := canvas.Get("clientHeight").Int()
 
 		w.devicePixelRatio = js.Global().Get("devicePixelRatio").Float()
 		canvas.Set("width", int(float64(width)*devicePixelRatio+0.5))   // Nearest non-negative int.
 		canvas.Set("height", int(float64(height)*devicePixelRatio+0.5)) // Nearest non-negative int.
-		canvas.Get("style").Call("setProperty", "width", fmt.Sprintf("%vpx", width))
-		canvas.Get("style").Call("setProperty", "height", fmt.Sprintf("%vpx", height))
+		log.Println("Canvas: ", float64(width), float64(height), devicePixelRatio)
 
 		if w.framebufferSizeCallback != nil {
 			// TODO: Callbacks may be blocking so they need to happen asyncronously. However,
 			//       GLFW API promises the callbacks will occur from one thread (i.e., sequentially), so may want to do that.
+			log.Println("framebufferSizeCallback : ", w.canvas.Get("width").Int(), w.canvas.Get("height").Int())
 			go w.framebufferSizeCallback(w, w.canvas.Get("width").Int(), w.canvas.Get("height").Int())
 		}
 		if w.sizeCallback != nil {
 			boundingW, boundingH := w.GetSize()
+			log.Println("sizeCallback : ", boundingW, boundingH)
 			go w.sizeCallback(w, boundingW, boundingH)
 		}
 		return nil
@@ -224,8 +229,10 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 			movementX = me.Get("clientX").Float() - w.cursorPos[0]
 			movementY = me.Get("clientY").Float() - w.cursorPos[1]
 		}
+		movementX *= w.devicePixelRatio
+		movementY *= w.devicePixelRatio
 
-		w.cursorPos[0], w.cursorPos[1] = me.Get("clientX").Float(), me.Get("clientY").Float()
+		w.cursorPos[0], w.cursorPos[1] = me.Get("clientX").Float() * w.devicePixelRatio, me.Get("clientY").Float() * w.devicePixelRatio
 		if w.cursorPosCallback != nil {
 			go w.cursorPosCallback(w, w.cursorPos[0], w.cursorPos[1])
 		}
@@ -454,13 +461,15 @@ func (w *Window) SetFramebufferSizeCallback(cbfun FramebufferSizeCallback) (prev
 }
 
 func (w *Window) GetSize() (width, height int) {
-	width = int(w.canvas.Call("getBoundingClientRect").Get("width").Float() * w.devicePixelRatio + 0.5)
-	height = int(w.canvas.Call("getBoundingClientRect").Get("height").Float() * w.devicePixelRatio + 0.5)
+	width = int(w.canvas.Get("clientWidth").Float() * w.devicePixelRatio + 0.5)
+	height = int(w.canvas.Get("clientHeight").Float() * w.devicePixelRatio + 0.5)
 
+	log.Println("GetSize: ", width, height)
 	return width, height
 }
 
 func (w *Window) GetFramebufferSize() (width, height int) {
+	log.Println("GetFramebufferSize: ", w.canvas.Get("width").Int(), w.canvas.Get("height").Int())
 	return w.canvas.Get("width").Int(), w.canvas.Get("height").Int()
 }
 
