@@ -4,6 +4,11 @@ package glfw
 
 var hints = make(map[Hint]int)
 
+const (
+	True = iota
+	OpenGLCoreProfile
+)
+
 type Hint int
 
 const (
@@ -12,6 +17,11 @@ const (
 	StencilBits
 	Samples
 	Resizable
+
+	ContextVersionMajor // TODO
+	ContextVersionMinor // TODO
+	OpenGLProfile // TODO
+	OpenGLForwardCompatible // TODO
 
 	// goxjs/glfw-specific hints for WebGL.
 	PremultipliedAlpha

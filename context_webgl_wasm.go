@@ -23,7 +23,9 @@ func newContext(canvas js.Value, ca *contextAttributes) (context js.Value, err e
 		"failIfMajorPerformanceCaveat":    ca.FailIfMajorPerformanceCaveat,
 	}
 
-	if gl := canvas.Call("getContext", "webgl", attrs); !gl.Equal(js.Null()) {
+	//	gl := canvas.Call("getContext", "webgl", attrs)
+	gl := canvas.Call("getContext", "webgl2", attrs)
+	if !gl.Equal(js.Null()) {
 		debug := js.Global().Get("WebGLDebugUtils")
 		if debug.Equal(js.Undefined()) {
 			return gl, errors.New("No debugging for WebGL.")

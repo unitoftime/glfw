@@ -2,7 +2,14 @@
 
 package glfw
 
-import "github.com/go-gl/glfw/v3.3/glfw"
+import (
+	"github.com/go-gl/glfw/v3.3/glfw"
+)
+
+const (
+	True = glfw.True
+	OpenGLCoreProfile = glfw.OpenGLCoreProfile
+)
 
 type Hint int
 
@@ -13,11 +20,18 @@ const (
 	Samples     = Hint(glfw.Samples)
 	Resizable   = Hint(glfw.Resizable)
 
+	ContextVersionMajor = Hint(glfw.ContextVersionMajor)
+	ContextVersionMinor = Hint(glfw.ContextVersionMinor)
+	OpenGLProfile = Hint(glfw.OpenGLProfile)
+	OpenGLForwardCompatible = Hint(glfw.OpenGLForwardCompatible)
+
 	// These hints used for WebGL contexts, ignored on desktop.
 	PremultipliedAlpha = noopHint
 	PreserveDrawingBuffer
 	PreferLowPowerToHighPerformance
 	FailIfMajorPerformanceCaveat
+
+	
 )
 
 // noopHint is ignored.
