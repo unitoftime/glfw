@@ -3,6 +3,7 @@
 package glfw
 
 import (
+	//	"log"
 	"errors"
 	"syscall/js"
 )
@@ -25,6 +26,15 @@ func newContext(canvas js.Value, ca *contextAttributes) (context js.Value, err e
 
 	//	gl := canvas.Call("getContext", "webgl", attrs)
 	gl := canvas.Call("getContext", "webgl2", attrs)
+
+	// if !gl.Equal(js.Null()) {
+	// 	//		ext := gl.Call("getExtension", "WEBGL_lose_context")
+	// 	// TODO - this isn't working?
+	// 	ext := gl.Call("getExtension", "WEBKIT_WEBGL_depth_texture")
+	// 	//		ext := gl.Call("getExtension", "WEBGL_depth_texture") // windows?
+	// 	log.Println("DepthTexture Extension: ", ext)
+	// }
+
 	if !gl.Equal(js.Null()) {
 		debug := js.Global().Get("WebGLDebugUtils")
 		if debug.Equal(js.Undefined()) {
