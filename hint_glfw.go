@@ -8,6 +8,7 @@ import (
 
 const (
 	True = glfw.True
+	False = glfw.False
 	OpenGLCoreProfile = glfw.OpenGLCoreProfile
 )
 
