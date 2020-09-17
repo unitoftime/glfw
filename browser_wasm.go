@@ -5,9 +5,7 @@ package glfw
 import (
 	"errors"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"runtime"
 	"syscall/js"
 )
@@ -293,7 +291,8 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 		document.AddEventListener("touchend", false, touchHandler)*/
 
 	// Request first animation frame.
-	js.Global().Call("requestAnimationFrame", animationFrameCallback)
+	// TODO - Is it important to requestAnimationFrame at the start?
+	// js.Global().Call("requestAnimationFrame", animationFrameCallback)
 
 	return w, nil
 }
@@ -481,18 +480,17 @@ func (w *Window) SetShouldClose(value bool) {
 
 func (w *Window) SwapBuffers() error {
 	<-animationFrameChan
+
+	animationFrameCallback := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		animationFrameChan <- struct{}{}
+		return nil
+	})
 	js.Global().Call("requestAnimationFrame", animationFrameCallback)
 
 	return nil
 }
 
 var animationFrameChan = make(chan struct{}, 1)
-
-var animationFrameCallback = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-	animationFrameChan <- struct{}{}
-
-	return nil
-})
 
 func (w *Window) GetCursorPos() (x, y float64) {
 	return w.cursorPos[0], w.cursorPos[1]
@@ -797,20 +795,6 @@ const (
 	ModAlt
 	ModSuper
 )
-
-// Open opens a named asset. It's the caller's responsibility to close it when done.
-func Open(name string) (io.ReadCloser, error) {
-	resp, err := http.Get(name)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("non-200 status: %s", resp.Status)
-	}
-	return resp.Body, nil
-}
-
-// ---
 
 func WaitEvents() {
 	// TODO.
