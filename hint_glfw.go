@@ -32,7 +32,13 @@ const (
 	PreferLowPowerToHighPerformance
 	FailIfMajorPerformanceCaveat
 
-	
+	Focused = Hint(glfw.Focused)
+	Decorated = Hint(glfw.Decorated)
+	Floating = Hint(glfw.Floating)
+	AutoIconify = Hint(glfw.AutoIconify)
+	TransparentFramebuffer = Hint(glfw.TransparentFramebuffer)
+	Maximized = Hint(glfw.Maximized)
+	Visible = Hint(glfw.Visible)
 )
 
 // noopHint is ignored.

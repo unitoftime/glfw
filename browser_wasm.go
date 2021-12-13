@@ -291,8 +291,11 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 		document.AddEventListener("touchend", false, touchHandler)*/
 
 	// Request first animation frame.
-	// TODO - Is it important to requestAnimationFrame at the start?
-	// js.Global().Call("requestAnimationFrame", animationFrameCallback)
+	animationFrameCallback := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		animationFrameChan <- struct{}{}
+		return nil
+	})
+	js.Global().Call("requestAnimationFrame", animationFrameCallback)
 
 	return w, nil
 }
@@ -707,6 +710,9 @@ const (
 	KeyRightAlt     Key = 346
 	KeyRightSuper   Key = 93
 	KeyMenu         Key = -iota - 1
+
+	// TODO - everything below here is wrong
+	KeyUnknown = 0
 )
 
 // toKey extracts Key from given KeyboardEvent.
@@ -763,6 +769,14 @@ const (
 	MouseButtonLeft   = MouseButton1
 	MouseButtonRight  = MouseButton2
 	MouseButtonMiddle = MouseButton3
+
+	// TODO - everything below this is wrong
+	MouseButton4 = 3
+	MouseButton5 = 3
+	MouseButton6 = 3
+	MouseButton7 = 3
+	MouseButton8 = 3
+	MouseButtonLast = 3
 )
 
 type Action int
@@ -813,9 +827,9 @@ func DefaultWindowHints() {
 func (w *Window) SetClipboardString(str string) {
 	// TODO: Implement.
 }
-func (w *Window) GetClipboardString() (string, error) {
+func (w *Window) GetClipboardString() string {
 	// TODO: Implement.
-	return "", errors.New("GetClipboardString not implemented")
+	return "GetClipboardString not implemented"
 }
 
 func (w *Window) SetTitle(title string) {
@@ -922,3 +936,70 @@ func (w *Window) SetDropCallback(cbfun DropCallback) (previous DropCallback) {
 	// TODO: Handle previous.
 	return nil
 }
+
+//------------------------------------------------------------------------------
+// TODO - everything below here is wrong
+
+// ------------------------------------------------------------------------------
+// TODO - these are all wrong
+
+type Joystick int
+
+// List all of the joysticks.
+const (
+	Joystick1 = iota
+	Joystick2
+	Joystick3
+	Joystick4
+	Joystick5
+	Joystick6
+	Joystick7
+	Joystick8
+	Joystick9
+	Joystick10
+	Joystick11
+	Joystick12
+	Joystick13
+	Joystick14
+	Joystick15
+	Joystick16
+
+	JoystickLast
+)
+
+type GamepadAxis int
+
+const (
+	AxisLeftX = iota
+	AxisLeftY
+	AxisRightX
+	AxisRightY
+	AxisLeftTrigger
+	AxisRightTrigger
+	AxisLast
+)
+
+type GamepadButton int
+// Gamepad button IDs.
+const (
+	ButtonA = iota
+	ButtonB
+	ButtonX
+	ButtonY
+	ButtonLeftBumper
+	ButtonRightBumper
+	ButtonBack
+	ButtonStart
+	ButtonGuide
+	ButtonLeftThumb
+	ButtonRightThumb
+	ButtonDpadUp
+	ButtonDpadRight
+	ButtonDpadDown
+	ButtonDpadLeft
+	ButtonLast
+	ButtonCross
+	ButtonCircle
+	ButtonSquare
+	ButtonTriangle
+)

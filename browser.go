@@ -746,49 +746,6 @@ func toModifierKey(ke *dom.KeyboardEvent) ModifierKey {
 	return mods
 }
 
-type MouseButton int
-
-const (
-	MouseButton1 MouseButton = 0
-	MouseButton2 MouseButton = 2 // Web MouseEvent has middle and right mouse buttons in reverse order.
-	MouseButton3 MouseButton = 1 // Web MouseEvent has middle and right mouse buttons in reverse order.
-
-	MouseButtonLeft   = MouseButton1
-	MouseButtonRight  = MouseButton2
-	MouseButtonMiddle = MouseButton3
-)
-
-type Action int
-
-const (
-	Release Action = 0
-	Press   Action = 1
-	Repeat  Action = 2
-)
-
-type InputMode int
-
-const (
-	CursorMode InputMode = iota
-	StickyKeysMode
-	StickyMouseButtonsMode
-)
-
-const (
-	CursorNormal = iota
-	CursorHidden
-	CursorDisabled
-)
-
-type ModifierKey int
-
-const (
-	ModShift ModifierKey = (1 << iota)
-	ModControl
-	ModAlt
-	ModSuper
-)
-
 // Open opens a named asset. It's the caller's responsibility to close it when done.
 func Open(name string) (io.ReadCloser, error) {
 	resp, err := http.Get(name)
@@ -929,3 +886,116 @@ func (w *Window) SetDropCallback(cbfun DropCallback) (previous DropCallback) {
 	// TODO: Handle previous.
 	return nil
 }
+
+//------------------------------------------------------------------------------
+type MouseButton int
+
+const (
+	MouseButton1 MouseButton = 0
+	MouseButton2 MouseButton = 2 // Web MouseEvent has middle and right mouse buttons in reverse order.
+	MouseButton3 MouseButton = 1 // Web MouseEvent has middle and right mouse buttons in reverse order.
+
+	MouseButtonLeft   = MouseButton1
+	MouseButtonRight  = MouseButton2
+	MouseButtonMiddle = MouseButton3
+
+	// TODO - these are wrong
+	MouseButton4      = 3
+	MouseButton5      = 3
+	MouseButton6      = 3
+	MouseButton7      = 3
+	MouseButton8      = 3
+	MouseButtonLast   = 3
+)
+
+type Action int
+const (
+	Release Action = 0
+	Press   Action = 1
+	Repeat  Action = 2
+)
+
+type InputMode int
+const (
+	CursorMode InputMode = iota
+	StickyKeysMode
+	StickyMouseButtonsMode
+)
+
+const (
+	CursorNormal = iota
+	CursorHidden
+	CursorDisabled
+)
+
+type ModifierKey int
+const (
+	ModShift ModifierKey = (1 << iota)
+	ModControl
+	ModAlt
+	ModSuper
+)
+
+// ------------------------------------------------------------------------------
+// TODO - these are all wrong
+
+type Joystick int
+
+// List all of the joysticks.
+const (
+	Joystick1 = iota
+	Joystick2
+	Joystick3
+	Joystick4
+	Joystick5
+	Joystick6
+	Joystick7
+	Joystick8
+	Joystick9
+	Joystick10
+	Joystick11
+	Joystick12
+	Joystick13
+	Joystick14
+	Joystick15
+	Joystick16
+
+	JoystickLast
+)
+
+type GamepadAxis int
+
+const (
+	AxisLeftX = iota
+	AxisLeftY
+	AxisRightX
+	AxisRightY
+	AxisLeftTrigger
+	AxisRightTrigger
+	AxisLast
+)
+
+type GamepadButton int
+// Gamepad button IDs.
+const (
+	ButtonA = iota
+	ButtonB
+	ButtonX
+	ButtonY
+	ButtonLeftBumper
+	ButtonRightBumper
+	ButtonBack
+	ButtonStart
+	ButtonGuide
+	ButtonLeftThumb
+	ButtonRightThumb
+	ButtonDpadUp
+	ButtonDpadRight
+	ButtonDpadDown
+	ButtonDpadLeft
+	ButtonLast
+	ButtonCross
+	ButtonCircle
+	ButtonSquare
+	ButtonTriangle
+)

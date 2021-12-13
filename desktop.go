@@ -5,14 +5,15 @@ package glfw
 import (
 	"io"
 	"os"
-	"runtime"
+	// "runtime"
+	"fmt"
 
 	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
-func init() {
-	runtime.LockOSThread()
-}
+// func init() {
+// 	runtime.LockOSThread()
+// }
 
 var contextWatcher ContextWatcher
 
@@ -327,21 +328,100 @@ const (
 	KeyRightAlt     = Key(glfw.KeyRightAlt)
 	KeyRightSuper   = Key(glfw.KeyRightSuper)
 	KeyMenu         = Key(glfw.KeyMenu)
+	KeyUnknown    = Key(glfw.KeyUnknown)
+	KeyLast = Key(glfw.KeyLast)
 )
 
-type MouseButton glfw.MouseButton
-
+type MouseButton int
 const (
-	MouseButton1 = MouseButton(glfw.MouseButton1)
-	MouseButton2 = MouseButton(glfw.MouseButton2)
-	MouseButton3 = MouseButton(glfw.MouseButton3)
-
+	MouseButton1      = MouseButton(glfw.MouseButton1)
+	MouseButton2      = MouseButton(glfw.MouseButton2)
+	MouseButton3      = MouseButton(glfw.MouseButton3)
+	MouseButton4      = MouseButton(glfw.MouseButton4)
+	MouseButton5      = MouseButton(glfw.MouseButton5)
+	MouseButton6      = MouseButton(glfw.MouseButton6)
+	MouseButton7      = MouseButton(glfw.MouseButton7)
+	MouseButton8      = MouseButton(glfw.MouseButton8)
+	MouseButtonLast   = MouseButton(glfw.MouseButtonLast)
 	MouseButtonLeft   = MouseButton(glfw.MouseButtonLeft)
 	MouseButtonRight  = MouseButton(glfw.MouseButtonRight)
 	MouseButtonMiddle = MouseButton(glfw.MouseButtonMiddle)
 )
 
-type Action glfw.Action
+type Joystick int
+
+// List all of the joysticks.
+const (
+	Joystick1  = Joystick(glfw.Joystick1)
+	Joystick2  = Joystick(glfw.Joystick2)
+	Joystick3  = Joystick(glfw.Joystick3)
+	Joystick4  = Joystick(glfw.Joystick4)
+	Joystick5  = Joystick(glfw.Joystick5)
+	Joystick6  = Joystick(glfw.Joystick6)
+	Joystick7  = Joystick(glfw.Joystick7)
+	Joystick8  = Joystick(glfw.Joystick8)
+	Joystick9  = Joystick(glfw.Joystick9)
+	Joystick10 = Joystick(glfw.Joystick10)
+	Joystick11 = Joystick(glfw.Joystick11)
+	Joystick12 = Joystick(glfw.Joystick12)
+	Joystick13 = Joystick(glfw.Joystick13)
+	Joystick14 = Joystick(glfw.Joystick14)
+	Joystick15 = Joystick(glfw.Joystick15)
+	Joystick16 = Joystick(glfw.Joystick16)
+
+	JoystickLast = Joystick(glfw.JoystickLast)
+)
+
+type GamepadAxis int
+
+const (
+	AxisLeftX        = GamepadAxis(glfw.AxisLeftX)
+	AxisLeftY        = GamepadAxis(glfw.AxisLeftY)
+	AxisRightX       = GamepadAxis(glfw.AxisRightX)
+	AxisRightY       = GamepadAxis(glfw.AxisRightY)
+	AxisLeftTrigger  = GamepadAxis(glfw.AxisLeftTrigger)
+	AxisRightTrigger = GamepadAxis(glfw.AxisRightTrigger)
+	AxisLast         = GamepadAxis(glfw.AxisLast)
+)
+
+type GamepadButton int
+// Gamepad button IDs.
+const (
+	ButtonA           = GamepadButton(glfw.ButtonA)
+	ButtonB           = GamepadButton(glfw.ButtonB)
+	ButtonX           = GamepadButton(glfw.ButtonX)
+	ButtonY           = GamepadButton(glfw.ButtonY)
+	ButtonLeftBumper  = GamepadButton(glfw.ButtonLeftBumper)
+	ButtonRightBumper = GamepadButton(glfw.ButtonRightBumper)
+	ButtonBack        = GamepadButton(glfw.ButtonBack)
+	ButtonStart       = GamepadButton(glfw.ButtonStart)
+	ButtonGuide       = GamepadButton(glfw.ButtonGuide)
+	ButtonLeftThumb   = GamepadButton(glfw.ButtonLeftThumb)
+	ButtonRightThumb  = GamepadButton(glfw.ButtonRightThumb)
+	ButtonDpadUp      = GamepadButton(glfw.ButtonDpadUp)
+	ButtonDpadRight   = GamepadButton(glfw.ButtonDpadRight)
+	ButtonDpadDown    = GamepadButton(glfw.ButtonDpadDown)
+	ButtonDpadLeft    = GamepadButton(glfw.ButtonDpadLeft)
+	ButtonLast        = GamepadButton(glfw.ButtonLast)
+	ButtonCross       = GamepadButton(glfw.ButtonCross)
+	ButtonCircle      = GamepadButton(glfw.ButtonCircle)
+	ButtonSquare      = GamepadButton(glfw.ButtonSquare)
+	ButtonTriangle    = GamepadButton(glfw.ButtonTriangle)
+)
+
+// type MouseButton glfw.MouseButton
+
+// const (
+// 	MouseButton1 = MouseButton(glfw.MouseButton1)
+// 	MouseButton2 = MouseButton(glfw.MouseButton2)
+// 	MouseButton3 = MouseButton(glfw.MouseButton3)
+
+// 	MouseButtonLeft   = MouseButton(glfw.MouseButtonLeft)
+// 	MouseButtonRight  = MouseButton(glfw.MouseButtonRight)
+// 	MouseButtonMiddle = MouseButton(glfw.MouseButtonMiddle)
+// )
+
+type Action = glfw.Action
 
 const (
 	Release = Action(glfw.Release)
@@ -397,8 +477,25 @@ func (w *Window) SetClipboardString(str string) {
 	glfw.SetClipboardString(str)
 }
 
-func (w *Window) GetClipboardString() (string, error) {
-        return glfw.GetClipboardString(), nil
+func (w *Window) GetClipboardString() string {
+        return glfw.GetClipboardString()
+}
+
+func (w *Window) SetMonitor(monitor *Monitor, xpos, ypos, width, height, refreshRate int) {
+	if monitor == nil {
+		fmt.Println("HERE", xpos, ypos, width, height, refreshRate)
+		w.Window.SetMonitor(nil, xpos, ypos, width, height, refreshRate)
+	} else {
+		w.Window.SetMonitor(monitor.Monitor, xpos, ypos, width, height, refreshRate)
+	}
+}
+
+func (w *Window) GetMonitor() *Monitor {
+	monitor := w.Window.GetMonitor()
+	if monitor == nil {
+		return nil
+	}
+	return &Monitor{monitor}
 }
 
 type CloseCallback func(w *Window)
@@ -526,3 +623,73 @@ func (w *Window) SetDropCallback(cbfun DropCallback) (previous DropCallback) {
 	// TODO: Handle previous.
 	return nil
 }
+
+func (w *Window) GetAttrib(attrib Hint) int {
+	return w.Window.GetAttrib(glfw.Hint(attrib))
+}
+
+
+/////////////////////////////////////////////////
+
+func WaitEventsTimeout(timeout float64) {
+	glfw.WaitEventsTimeout(timeout)
+}
+
+func (j Joystick) GetName() string {
+	return glfw.Joystick(j).GetName()
+}
+
+func (j Joystick) GetButtons() []Action {
+	return glfw.Joystick(j).GetButtons()
+}
+
+func (j Joystick) GetAxes() []float32 {
+	return glfw.Joystick(j).GetAxes()
+}
+
+func (j Joystick) Present() bool {
+	return glfw.Joystick(j).Present()
+}
+
+func (j Joystick) IsGamepad() bool {
+	return glfw.Joystick(j).IsGamepad()
+}
+
+func (j Joystick) GetGamepadState() *GamepadState {
+	gamepadState := glfw.Joystick(j).GetGamepadState()
+	if gamepadState == nil {
+		return nil
+	}
+	state := GamepadState(*gamepadState)
+	return &state
+}
+
+type GamepadState glfw.GamepadState
+
+func GetMonitors() []*Monitor {
+	monitors := make([]*Monitor, 0)
+	for _, monitor := range glfw.GetMonitors() {
+		monitors = append(monitors, &Monitor{monitor})
+	}
+	return monitors
+}
+
+func (m *Monitor) GetVideoMode() *VidMode {
+	return m.GetVideoMode()
+}
+
+func (m *Monitor) GetVideoModes() []*VidMode {
+	modes := make([]*VidMode, 0)
+	for _, mode := range m.GetVideoModes() {
+		modes = append(modes, &VidMode{
+			Width: mode.Width,
+			Height: mode.Height,
+			RedBits: mode.RedBits,
+			GreenBits: mode.GreenBits,
+			BlueBits: mode.BlueBits,
+			RefreshRate: mode.RefreshRate,
+		})
+	}
+	return modes
+}
+

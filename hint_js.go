@@ -6,6 +6,7 @@ var hints = make(map[Hint]int)
 
 const (
 	True = iota
+	False
 	OpenGLCoreProfile
 )
 
@@ -28,6 +29,13 @@ const (
 	PreserveDrawingBuffer
 	PreferLowPowerToHighPerformance
 	FailIfMajorPerformanceCaveat
+
+	Decorated // TODO
+	Floating // TODO
+	AutoIconify // TODO
+	TransparentFramebuffer // TODO
+	Maximized // TODO
+	Visible // TODO
 )
 
 func WindowHint(target Hint, hint int) {
