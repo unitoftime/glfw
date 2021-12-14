@@ -1,4 +1,4 @@
-module github.com/jstewart7/glfw
+module github.com/unitoftime/glfw
 
 go 1.14
 
