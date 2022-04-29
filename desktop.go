@@ -328,8 +328,8 @@ const (
 	KeyRightAlt     = Key(glfw.KeyRightAlt)
 	KeyRightSuper   = Key(glfw.KeyRightSuper)
 	KeyMenu         = Key(glfw.KeyMenu)
-	KeyUnknown    = Key(glfw.KeyUnknown)
-	KeyLast = Key(glfw.KeyLast)
+	KeyUnknown      = Key(glfw.KeyUnknown)
+	KeyLast         = Key(glfw.KeyLast)
 )
 
 type MouseButton int

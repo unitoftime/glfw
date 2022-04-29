@@ -713,6 +713,8 @@ const (
 
 	// TODO - everything below here is wrong
 	KeyUnknown = 0
+	// TODO - This is just because we use KeyLast to build an array of inputs
+	KeyLast         Key = 400 // The last/largest key value
 )
 
 // toKey extracts Key from given KeyboardEvent.

@@ -706,6 +706,8 @@ const (
 	KeyRightAlt     Key = 346
 	KeyRightSuper   Key = 93
 	KeyMenu         Key = -iota - 1
+	// TODO - This is just because we use KeyLast to build an array of inputs
+	KeyLast         Key = 400 // The last/largest key value
 )
 
 // toKey extracts Key from given KeyboardEvent.
