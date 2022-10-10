@@ -24,7 +24,6 @@ func newContext(canvas js.Value, ca *contextAttributes) (context js.Value, err e
 		"failIfMajorPerformanceCaveat":    ca.FailIfMajorPerformanceCaveat,
 	}
 
-	//	gl := canvas.Call("getContext", "webgl", attrs)
 	gl := canvas.Call("getContext", "webgl2", attrs)
 
 	// if !gl.Equal(js.Null()) {
@@ -35,6 +34,12 @@ func newContext(canvas js.Value, ca *contextAttributes) (context js.Value, err e
 	// 	log.Println("DepthTexture Extension: ", ext)
 	// }
 
+	// if gl.Equal(js.Null()) {
+	// 	// If gl context is null, then webgl2 creation failed. Let's try webgl1
+	// 	log.Println("Failed to create Webgl2, trying webgl1")
+	// 	gl = canvas.Call("getContext", "webgl", attrs)
+	// }
+
 	if !gl.Equal(js.Null()) {
 		debug := js.Global().Get("WebGLDebugUtils")
 		if debug.Equal(js.Undefined()) {
@@ -43,6 +48,7 @@ func newContext(canvas js.Value, ca *contextAttributes) (context js.Value, err e
 		gl = debug.Call("makeDebugContext", gl)
 		return gl, nil
 	} else if gl := canvas.Call("getContext", "experimental-webgl", attrs); gl.Equal(js.Null()) {
+		// log.Println("Failed to create, trying experimental-webgl")
 		return gl, nil
 	} else {
 		return js.Value{}, errors.New("Creating a WebGL context has failed.")
