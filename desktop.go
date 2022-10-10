@@ -70,6 +70,11 @@ type Window struct {
 	*glfw.Window
 }
 
+
+func (w *Window) GetContentScale() (float32, float32) {
+	return w.Window.GetContentScale()
+}
+
 type Monitor struct {
 	*glfw.Monitor
 }

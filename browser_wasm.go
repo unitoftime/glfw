@@ -98,6 +98,7 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 		height := js.Global().Get("innerHeight").Int()
 
 		w.devicePixelRatio = js.Global().Get("devicePixelRatio").Float()
+		// fmt.Println("w.devicePixelRatio", w.devicePixelRatio)
 		canvas.Set("width", int(float64(width)*devicePixelRatio+0.5))   // Nearest non-negative int.
 		canvas.Set("height", int(float64(height)*devicePixelRatio+0.5)) // Nearest non-negative int.
 		canvas.Get("style").Call("setProperty", "width", fmt.Sprintf("%vpx", width))
@@ -106,6 +107,7 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 		if w.framebufferSizeCallback != nil {
 			// TODO: Callbacks may be blocking so they need to happen asyncronously. However,
 			//       GLFW API promises the callbacks will occur from one thread (i.e., sequentially), so may want to do that.
+
 			go w.framebufferSizeCallback(w, w.canvas.Get("width").Int(), w.canvas.Get("height").Int())
 		}
 		if w.sizeCallback != nil {
@@ -464,6 +466,11 @@ func (w *Window) GetSize() (width, height int) {
 
 func (w *Window) GetFramebufferSize() (width, height int) {
 	return w.canvas.Get("width").Int(), w.canvas.Get("height").Int()
+}
+
+// TODO - is it possible for these to differ?
+func (w *Window) GetContentScale() (float32, float32) {
+	return float32(w.devicePixelRatio), float32(w.devicePixelRatio)
 }
 
 func (w *Window) GetPos() (x, y int) {
