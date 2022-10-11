@@ -337,6 +337,14 @@ const (
 	KeyLast         = Key(glfw.KeyLast)
 )
 
+func GetKeyScanCode(key Key) int {
+	return glfw.GetKeyScancode(glfw.Key(key))
+}
+
+func GetKeyName(key Key, scancode int) string {
+	return glfw.GetKeyName(glfw.Key(key), scancode)
+}
+
 type MouseButton int
 const (
 	MouseButton1      = MouseButton(glfw.MouseButton1)
