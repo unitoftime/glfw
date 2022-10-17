@@ -128,12 +128,14 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 
 		key := toKey(ke)
 
-		// Extend slice if needed.
-		neededSize := int(key) + 1
-		if neededSize > len(w.keys) {
-			w.keys = append(w.keys, make([]Action, neededSize-len(w.keys))...)
+		if key != KeyUnknown {
+			// Extend slice if needed.
+			neededSize := int(key) + 1
+			if neededSize > len(w.keys) {
+				w.keys = append(w.keys, make([]Action, neededSize-len(w.keys))...)
+			}
+			w.keys[key] = action
 		}
-		w.keys[key] = action
 
 		if w.keyCallback != nil {
 			mods := toModifierKey(ke)
@@ -158,12 +160,14 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 
 		key := toKey(ke)
 
-		// Extend slice if needed.
-		neededSize := int(key) + 1
-		if neededSize > len(w.keys) {
-			w.keys = append(w.keys, make([]Action, neededSize-len(w.keys))...)
+		if key != KeyUnknown {
+			// Extend slice if needed.
+			neededSize := int(key) + 1
+			if neededSize > len(w.keys) {
+				w.keys = append(w.keys, make([]Action, neededSize-len(w.keys))...)
+			}
+			w.keys[key] = Release
 		}
-		w.keys[key] = Release
 
 		if w.keyCallback != nil {
 			mods := toModifierKey(ke)
@@ -837,11 +841,13 @@ var keyMap = map[string]Key{
 	"ShiftLeft": KeyLeftShift,
 	"ControlLeft": KeyLeftControl,
 	"AltLeft": KeyLeftAlt,
-	"SuperLeft": KeyLeftSuper,
+	"OSLeft": KeyLeftSuper,
+	"MetaLeft": KeyLeftSuper,
 	"ShiftRight": KeyRightShift,
 	"ControlRight": KeyRightControl,
 	"AltRight": KeyRightAlt,
-	"SuperRight": KeyRightSuper,
+	"OSRight": KeyRightSuper,
+	"MetaRight": KeyRightSuper,
 	"ContextMenu": KeyMenu,// ????
 }
 
