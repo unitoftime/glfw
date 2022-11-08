@@ -10,6 +10,7 @@ import (
 	"syscall/js"
 )
 
+var htmlWindow = js.Global().Get("window")
 var document = js.Global().Get("document")
 
 var contextWatcher ContextWatcher
@@ -266,6 +267,55 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 		return nil
 	}))
 
+	htmlWindow.Call("addEventListener", "focus", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// fmt.Println("FOCUS")
+		if w.focusCallback != nil {
+			// TODO - should this be in a goroutine?
+			inFocus := true
+			w.focusCallback(w, inFocus)
+		}
+
+		return nil
+	}))
+
+	htmlWindow.Call("addEventListener", "blur", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// fmt.Println("BLUR")
+
+		// Attempt to clear keys
+		w.justWentHidden = true
+		for key := range w.keys {
+			w.keys[key] = Release
+		}
+		// animationFrameChan <- struct{}{}
+
+		if w.focusCallback != nil {
+			// TODO - should this be in a goroutine?
+			inFocus := false
+			w.focusCallback(w, inFocus)
+		}
+
+		return nil
+	}))
+
+	// Detect window losing focus: https://developer.mozilla.org/en-US/docs/Web/API/Document/visibilitychange_event
+	// document.Call("addEventListener", "visibilitychange", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	// 	// event := args[0]
+	// 	fmt.Println("VISCHANGE")
+	// 	state := document.Get("visibilityState").String()
+
+	// 	// If they are leaving the page, clear all the inputs
+	// 	if state == "hidden" {
+	// 		w.justWentHidden = true
+
+	// 		// TODO - clear mouse input too?
+	// 		for key := range w.keys {
+	// 			w.keys[key] = Release
+	// 		}
+	// 		animationFrameChan <- struct{}{}
+	// 	}
+	// 	return nil
+	// }))
+
 	/*
 		// Hacky mouse-emulation-via-touch.
 		touchHandler := func(event dom.Event) {
@@ -294,7 +344,8 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 		}
 		document.AddEventListener("touchstart", false, touchHandler)
 		document.AddEventListener("touchmove", false, touchHandler)
-		document.AddEventListener("touchend", false, touchHandler)*/
+		document.AddEventListener("touchend", false, touchHandler)
+*/
 
 	// Request first animation frame.
 	animationFrameCallback := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -339,6 +390,9 @@ type Window struct {
 	charCallback            CharCallback
 	framebufferSizeCallback FramebufferSizeCallback
 	sizeCallback            SizeCallback
+	focusCallback           FocusCallback
+
+	justWentHidden bool // Used to track if the window just went hidden
 
 	touches js.Value // Hacky mouse-emulation-via-touch.
 }
@@ -461,6 +515,15 @@ func (w *Window) SetFramebufferSizeCallback(cbfun FramebufferSizeCallback) (prev
 	return nil
 }
 
+type FocusCallback func(w *Window, focused bool)
+
+func (w *Window) SetFocusCallback(cbfun FocusCallback) (previous FocusCallback) {
+	// TODO: Implement.
+
+	// TODO: Handle previous.
+	return nil
+}
+
 func (w *Window) GetSize() (width, height int) {
 	width = int(w.canvas.Call("getBoundingClientRect").Get("width").Float() * w.devicePixelRatio + 0.5)
 	height = int(w.canvas.Call("getBoundingClientRect").Get("height").Float() * w.devicePixelRatio + 0.5)
@@ -493,6 +556,14 @@ func (w *Window) SetShouldClose(value bool) {
 }
 
 func (w *Window) SwapBuffers() error {
+	if w.justWentHidden {
+		// TODO - maybe use settimeout to have code run really slowly?
+		fmt.Println("JUSTWENTHIDDEN")
+		w.justWentHidden = false
+		animationFrameChan <- struct{}{}
+		return nil
+	}
+
 	<-animationFrameChan
 
 	animationFrameCallback := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -1034,15 +1105,6 @@ func (w *Window) SetCharModsCallback(cbfun CharModsCallback) (previous CharModsC
 type PosCallback func(w *Window, xpos int, ypos int)
 
 func (w *Window) SetPosCallback(cbfun PosCallback) (previous PosCallback) {
-	// TODO: Implement.
-
-	// TODO: Handle previous.
-	return nil
-}
-
-type FocusCallback func(w *Window, focused bool)
-
-func (w *Window) SetFocusCallback(cbfun FocusCallback) (previous FocusCallback) {
 	// TODO: Implement.
 
 	// TODO: Handle previous.
