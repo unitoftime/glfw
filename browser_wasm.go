@@ -558,7 +558,7 @@ func (w *Window) SetShouldClose(value bool) {
 func (w *Window) SwapBuffers() error {
 	if w.justWentHidden {
 		// TODO - maybe use settimeout to have code run really slowly?
-		fmt.Println("JUSTWENTHIDDEN")
+		// fmt.Println("JUSTWENTHIDDEN")
 		w.justWentHidden = false
 		animationFrameChan <- struct{}{}
 		return nil
