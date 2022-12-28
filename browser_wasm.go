@@ -1,3 +1,4 @@
+//go:build js && wasm
 // +build js,wasm
 
 package glfw
@@ -24,28 +25,41 @@ func Terminate() error {
 	return nil
 }
 
+func resolveCanvas() js.Value {
+	canvas := document.Call("querySelector", "#glfw")
+	if canvas.Equal(js.Null()) {
+		canvas = document.Call("querySelector", "canvas")
+	}
+	return canvas
+}
+
 func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Window, error) {
 	// THINK: Consider https://developer.mozilla.org/en-US/docs/Web/API/Window.open?
+
+	// Find a canvas, preferably one with an id of glfw
+	canvas := resolveCanvas()
+
+	if canvas.Equal(js.Null()) {
+		parent := document.Call("querySelector", "#glfw-container")
+		canvas = document.Call("createElement", "canvas")
+		canvas.Call("setAttribute", "id", "glfw")
+
+		if parent.Equal(js.Null()) {
+			parent = document.Get("body")
+		}
+
+		parent.Call("appendChild", canvas)
+	}
 
 	// HACK: Go fullscreen?
 	width := js.Global().Get("innerWidth").Int()
 	height := js.Global().Get("innerHeight").Int()
-
-	canvas := document.Call("createElement", "canvas")
 
 	devicePixelRatio := js.Global().Get("devicePixelRatio").Float()
 	canvas.Set("width", int(float64(width)*devicePixelRatio+0.5))   // Nearest non-negative int.
 	canvas.Set("height", int(float64(height)*devicePixelRatio+0.5)) // Nearest non-negative int.
 	canvas.Get("style").Call("setProperty", "width", fmt.Sprintf("%vpx", width))
 	canvas.Get("style").Call("setProperty", "height", fmt.Sprintf("%vpx", height))
-
-	if document.Get("body").Equal(js.Null()) {
-		body := document.Call("createElement", "body")
-		document.Set("body", body)
-		log.Println("Creating body, since it doesn't exist.")
-	}
-	document.Get("body").Get("style").Call("setProperty", "margin", "0")
-	document.Get("body").Call("appendChild", canvas)
 
 	document.Set("title", title)
 
@@ -69,8 +83,8 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 	}
 
 	w := &Window{
-		canvas:  canvas,
-		context: context,
+		canvas:           canvas,
+		context:          context,
 		devicePixelRatio: devicePixelRatio,
 	}
 
@@ -345,7 +359,7 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 		document.AddEventListener("touchstart", false, touchHandler)
 		document.AddEventListener("touchmove", false, touchHandler)
 		document.AddEventListener("touchend", false, touchHandler)
-*/
+	*/
 
 	// Request first animation frame.
 	animationFrameCallback := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -525,8 +539,8 @@ func (w *Window) SetFocusCallback(cbfun FocusCallback) (previous FocusCallback) 
 }
 
 func (w *Window) GetSize() (width, height int) {
-	width = int(w.canvas.Call("getBoundingClientRect").Get("width").Float() * w.devicePixelRatio + 0.5)
-	height = int(w.canvas.Call("getBoundingClientRect").Get("height").Float() * w.devicePixelRatio + 0.5)
+	width = int(w.canvas.Call("getBoundingClientRect").Get("width").Float()*w.devicePixelRatio + 0.5)
+	height = int(w.canvas.Call("getBoundingClientRect").Get("height").Float()*w.devicePixelRatio + 0.5)
 
 	return width, height
 }
@@ -670,7 +684,7 @@ type Key int
 
 // Docs: https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code
 const (
-	KeySpace        Key = Key(iota)
+	KeySpace Key = Key(iota)
 	KeyApostrophe
 	KeyComma
 	KeyMinus
@@ -791,135 +805,135 @@ const (
 	KeyRightSuper
 	KeyMenu
 
-	KeyUnknown      Key = -1
-	KeyLast         Key = KeyMenu
+	KeyUnknown Key = -1
+	KeyLast    Key = KeyMenu
 )
 
 // Contains a mapping from javascript
 // TODO - some of these I wasn't sure about
 var keyMap = map[string]Key{
-	"Space": KeySpace,
-	"Quote": KeyApostrophe,//???
-	"Comma": KeyComma,
-	"Minus": KeyMinus,
-	"Period": KeyPeriod,
-	"Slash": KeySlash,
-	"Digit0": Key0,
-	"Digit1": Key1,
-	"Digit2": Key2,
-	"Digit3": Key3,
-	"Digit4": Key4,
-	"Digit5": Key5,
-	"Digit6": Key6,
-	"Digit7": Key7,
-	"Digit8": Key8,
-	"Digit9": Key9,
-	"Semicolon": KeySemicolon,
-	"Equal": KeyEqual,
-	"KeyA": KeyA,
-	"KeyB": KeyB,
-	"KeyC": KeyC,
-	"KeyD": KeyD,
-	"KeyE": KeyE,
-	"KeyF": KeyF,
-	"KeyG": KeyG,
-	"KeyH": KeyH,
-	"KeyI": KeyI,
-	"KeyJ": KeyJ,
-	"KeyK": KeyK,
-	"KeyL": KeyL,
-	"KeyM": KeyM,
-	"KeyN": KeyN,
-	"KeyO": KeyO,
-	"KeyP": KeyP,
-	"KeyQ": KeyQ,
-	"KeyR": KeyR,
-	"KeyS": KeyS,
-	"KeyT": KeyT,
-	"KeyU": KeyU,
-	"KeyV": KeyV,
-	"KeyW": KeyW,
-	"KeyX": KeyX,
-	"KeyY": KeyY,
-	"KeyZ": KeyZ,
-	"BracketLeft": KeyLeftBracket,
-	"Backslash": KeyBackslash,
+	"Space":        KeySpace,
+	"Quote":        KeyApostrophe, //???
+	"Comma":        KeyComma,
+	"Minus":        KeyMinus,
+	"Period":       KeyPeriod,
+	"Slash":        KeySlash,
+	"Digit0":       Key0,
+	"Digit1":       Key1,
+	"Digit2":       Key2,
+	"Digit3":       Key3,
+	"Digit4":       Key4,
+	"Digit5":       Key5,
+	"Digit6":       Key6,
+	"Digit7":       Key7,
+	"Digit8":       Key8,
+	"Digit9":       Key9,
+	"Semicolon":    KeySemicolon,
+	"Equal":        KeyEqual,
+	"KeyA":         KeyA,
+	"KeyB":         KeyB,
+	"KeyC":         KeyC,
+	"KeyD":         KeyD,
+	"KeyE":         KeyE,
+	"KeyF":         KeyF,
+	"KeyG":         KeyG,
+	"KeyH":         KeyH,
+	"KeyI":         KeyI,
+	"KeyJ":         KeyJ,
+	"KeyK":         KeyK,
+	"KeyL":         KeyL,
+	"KeyM":         KeyM,
+	"KeyN":         KeyN,
+	"KeyO":         KeyO,
+	"KeyP":         KeyP,
+	"KeyQ":         KeyQ,
+	"KeyR":         KeyR,
+	"KeyS":         KeyS,
+	"KeyT":         KeyT,
+	"KeyU":         KeyU,
+	"KeyV":         KeyV,
+	"KeyW":         KeyW,
+	"KeyX":         KeyX,
+	"KeyY":         KeyY,
+	"KeyZ":         KeyZ,
+	"BracketLeft":  KeyLeftBracket,
+	"Backslash":    KeyBackslash,
 	"BracketRight": KeyRightBracket,
-//	"KeyGraveAccent": KeyGraveAccent,
+	//	"KeyGraveAccent": KeyGraveAccent,
 	// "KeyWorld1": KeyWorld1,
 	// "KeyWorld2": KeyWorld2,
-	"Escape": KeyEscape,
-	"Enter": KeyEnter,
-	"Tab": KeyTab,
-	"Backspace": KeyBackspace,
-	"Insert": KeyInsert,
-	"Delete": KeyDelete,
-	"ArrowRight": KeyRight,
-	"ArrowLeft": KeyLeft,
-	"ArrowDown": KeyDown,
-	"ArrowUp": KeyUp,
-	"PageUp": KeyPageUp,
-	"PageDown": KeyPageDown,
-	"Home": KeyHome,
-	"End": KeyEnd,
-	"CapsLock": KeyCapsLock,
-	"ScrollLock": KeyScrollLock,
-	"NumLock": KeyNumLock,
+	"Escape":      KeyEscape,
+	"Enter":       KeyEnter,
+	"Tab":         KeyTab,
+	"Backspace":   KeyBackspace,
+	"Insert":      KeyInsert,
+	"Delete":      KeyDelete,
+	"ArrowRight":  KeyRight,
+	"ArrowLeft":   KeyLeft,
+	"ArrowDown":   KeyDown,
+	"ArrowUp":     KeyUp,
+	"PageUp":      KeyPageUp,
+	"PageDown":    KeyPageDown,
+	"Home":        KeyHome,
+	"End":         KeyEnd,
+	"CapsLock":    KeyCapsLock,
+	"ScrollLock":  KeyScrollLock,
+	"NumLock":     KeyNumLock,
 	"PrintScreen": KeyPrintScreen,
-	"Pause": KeyPause,
-	"F1": KeyF1,
-	"F2": KeyF2,
-	"F3": KeyF3,
-	"F4": KeyF4,
-	"F5": KeyF5,
-	"F6": KeyF6,
-	"F7": KeyF7,
-	"F8": KeyF8,
-	"F9": KeyF9,
-	"F10": KeyF10,
-	"F11": KeyF11,
-	"F12": KeyF12,
-	"F13": KeyF13,
-	"F14": KeyF14,
-	"F15": KeyF15,
-	"F16": KeyF16,
-	"F17": KeyF17,
-	"F18": KeyF18,
-	"F19": KeyF19,
-	"F20": KeyF20,
-	"F21": KeyF21,
-	"F22": KeyF22,
-	"F23": KeyF23,
-	"F24": KeyF24,
+	"Pause":       KeyPause,
+	"F1":          KeyF1,
+	"F2":          KeyF2,
+	"F3":          KeyF3,
+	"F4":          KeyF4,
+	"F5":          KeyF5,
+	"F6":          KeyF6,
+	"F7":          KeyF7,
+	"F8":          KeyF8,
+	"F9":          KeyF9,
+	"F10":         KeyF10,
+	"F11":         KeyF11,
+	"F12":         KeyF12,
+	"F13":         KeyF13,
+	"F14":         KeyF14,
+	"F15":         KeyF15,
+	"F16":         KeyF16,
+	"F17":         KeyF17,
+	"F18":         KeyF18,
+	"F19":         KeyF19,
+	"F20":         KeyF20,
+	"F21":         KeyF21,
+	"F22":         KeyF22,
+	"F23":         KeyF23,
+	"F24":         KeyF24,
 	// "F25": KeyF25,
-	"Numpad0": KeyKP0,
-	"Numpad1": KeyKP1,
-	"Numpad2": KeyKP2,
-	"Numpad3": KeyKP3,
-	"Numpad4": KeyKP4,
-	"Numpad5": KeyKP5,
-	"Numpad6": KeyKP6,
-	"Numpad7": KeyKP7,
-	"Numpad8": KeyKP8,
-	"Numpad9": KeyKP9,
-	"NumpadDecimal": KeyKPDecimal,
-	"NumpadDivide": KeyKPDivide,
+	"Numpad0":        KeyKP0,
+	"Numpad1":        KeyKP1,
+	"Numpad2":        KeyKP2,
+	"Numpad3":        KeyKP3,
+	"Numpad4":        KeyKP4,
+	"Numpad5":        KeyKP5,
+	"Numpad6":        KeyKP6,
+	"Numpad7":        KeyKP7,
+	"Numpad8":        KeyKP8,
+	"Numpad9":        KeyKP9,
+	"NumpadDecimal":  KeyKPDecimal,
+	"NumpadDivide":   KeyKPDivide,
 	"NumpadMultiply": KeyKPMultiply,
 	"NumpadSubtract": KeyKPSubtract,
-	"NumpadAdd": KeyKPAdd,
-	"NumpadEnter": KeyKPEnter,
-	"NumpadEqual": KeyKPEqual,
-	"ShiftLeft": KeyLeftShift,
-	"ControlLeft": KeyLeftControl,
-	"AltLeft": KeyLeftAlt,
-	"OSLeft": KeyLeftSuper,
-	"MetaLeft": KeyLeftSuper,
-	"ShiftRight": KeyRightShift,
-	"ControlRight": KeyRightControl,
-	"AltRight": KeyRightAlt,
-	"OSRight": KeyRightSuper,
-	"MetaRight": KeyRightSuper,
-	"ContextMenu": KeyMenu,// ????
+	"NumpadAdd":      KeyKPAdd,
+	"NumpadEnter":    KeyKPEnter,
+	"NumpadEqual":    KeyKPEqual,
+	"ShiftLeft":      KeyLeftShift,
+	"ControlLeft":    KeyLeftControl,
+	"AltLeft":        KeyLeftAlt,
+	"OSLeft":         KeyLeftSuper,
+	"MetaLeft":       KeyLeftSuper,
+	"ShiftRight":     KeyRightShift,
+	"ControlRight":   KeyRightControl,
+	"AltRight":       KeyRightAlt,
+	"OSRight":        KeyRightSuper,
+	"MetaRight":      KeyRightSuper,
+	"ContextMenu":    KeyMenu, // ????
 }
 
 func GetKeyScanCode(key Key) int {
@@ -972,11 +986,11 @@ const (
 	MouseButtonMiddle = MouseButton3
 
 	// TODO - everything below this is wrong
-	MouseButton4 = 3
-	MouseButton5 = 3
-	MouseButton6 = 3
-	MouseButton7 = 3
-	MouseButton8 = 3
+	MouseButton4    = 3
+	MouseButton5    = 3
+	MouseButton6    = 3
+	MouseButton7    = 3
+	MouseButton8    = 3
 	MouseButtonLast = 3
 )
 
@@ -1172,6 +1186,7 @@ const (
 )
 
 type GamepadButton int
+
 // Gamepad button IDs.
 const (
 	ButtonA = iota
