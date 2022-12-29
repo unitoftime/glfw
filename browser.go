@@ -28,7 +28,7 @@ func Terminate() error {
 	return nil
 }
 
-func resolveCanvas() *dom.HTMLCanvasElement, bool {
+func resolveCanvas() (*dom.HTMLCanvasElement, bool) {
 	canvas, ok := document.QuerySelector("#glfw").(*dom.HTMLCanvasElement)
 	if !ok {
 		canvas, ok = document.QuerySelector("canvas").(*dom.HTMLCanvasElement)
@@ -40,7 +40,7 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 	// THINK: Consider https://developer.mozilla.org/en-US/docs/Web/API/Window.open?
 
 	// Find a canvas, preferably one with an id of glfw
-	canvas, ok := resolveCanvas();
+	canvas, ok := resolveCanvas()
 
 	if !ok {
 		parent := document.QuerySelector("#glfw-container")
