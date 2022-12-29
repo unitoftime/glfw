@@ -42,7 +42,7 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 	// Find a canvas, preferably one with an id of glfw
 	canvas, ok := resolveCanvas();
 
-	if ok == false {
+	if !ok {
 		parent := document.QuerySelector("#glfw-container")
 		canvas = document.CreateElement("canvas").(*dom.HTMLCanvasElement)
 		canvas.SetAttribute("id", "glfw")
