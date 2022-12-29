@@ -30,7 +30,7 @@ func Terminate() error {
 
 func resolveCanvas() *dom.HTMLCanvasElement, bool {
 	canvas, ok := document.QuerySelector("#glfw").(*dom.HTMLCanvasElement)
-	if ok == false {
+	if !ok {
 		canvas, ok = document.QuerySelector("canvas").(*dom.HTMLCanvasElement)
 	}
 	return canvas, ok
