@@ -312,23 +312,26 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 	}))
 
 	// Detect window losing focus: https://developer.mozilla.org/en-US/docs/Web/API/Document/visibilitychange_event
-	// document.Call("addEventListener", "visibilitychange", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-	// 	// event := args[0]
-	// 	fmt.Println("VISCHANGE")
-	// 	state := document.Get("visibilityState").String()
+	document.Call("addEventListener", "visibilitychange", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// event := args[0]
+		state := document.Get("visibilityState").String()
+		fmt.Println("VISCHANGE:", state)
 
-	// 	// If they are leaving the page, clear all the inputs
-	// 	if state == "hidden" {
-	// 		w.justWentHidden = true
+		// If they are leaving the page, clear all the inputs
+		if state == "hidden" {
+			w.justWentHidden = true
+			w.hidden = true
 
-	// 		// TODO - clear mouse input too?
-	// 		for key := range w.keys {
-	// 			w.keys[key] = Release
-	// 		}
-	// 		animationFrameChan <- struct{}{}
-	// 	}
-	// 	return nil
-	// }))
+			// TODO - clear mouse input too?
+			for key := range w.keys {
+				w.keys[key] = Release
+			}
+			// animationFrameChan <- struct{}{}
+		} else if state == "visible" {
+			w.hidden = false
+		}
+		return nil
+	}))
 
 	/*
 		// Hacky mouse-emulation-via-touch.
@@ -407,6 +410,7 @@ type Window struct {
 	focusCallback           FocusCallback
 
 	justWentHidden bool // Used to track if the window just went hidden
+	hidden bool // Used to track if the window is hidden or visible
 
 	touches js.Value // Hacky mouse-emulation-via-touch.
 }
@@ -417,6 +421,10 @@ func (w *Window) SetPos(xpos, ypos int) {
 
 func (w *Window) SetSize(width, height int) {
 	fmt.Println("not implemented: SetSize:", width, height)
+}
+
+func (w *Window) BrowserHidden() bool {
+	return w.hidden
 }
 
 // goFullscreenIfRequested performs webkitRequestFullscreen if it was scheduled. It is called only from
@@ -571,12 +579,18 @@ func (w *Window) SetShouldClose(value bool) {
 
 func (w *Window) SwapBuffers() error {
 	if w.justWentHidden {
-		// TODO - maybe use settimeout to have code run really slowly?
-		// fmt.Println("JUSTWENTHIDDEN")
 		w.justWentHidden = false
-		animationFrameChan <- struct{}{}
-		return nil
 	}
+	if w.hidden {
+		return nil // Don't sync on RAF because we can't render anyways
+	}
+	// if w.justWentHidden {
+	// 	// TODO - maybe use settimeout to have code run really slowly?
+	// 	// fmt.Println("JUSTWENTHIDDEN")
+	// 	w.justWentHidden = false
+	// 	// animationFrameChan <- struct{}{}
+	// 	// return nil
+	// }
 
 	<-animationFrameChan
 

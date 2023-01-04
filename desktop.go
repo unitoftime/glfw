@@ -192,6 +192,11 @@ func (w *Window) SetFramebufferSizeCallback(cbfun FramebufferSizeCallback) (prev
 	return nil
 }
 
+// Always returns false because we aren't in a browser
+func (w *Window) BrowserHidden() bool {
+	return false
+}
+
 func (w *Window) GetKey(key Key) Action {
 	a := w.Window.GetKey(glfw.Key(key))
 	return Action(a)
