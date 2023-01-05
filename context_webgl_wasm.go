@@ -3,7 +3,6 @@
 package glfw
 
 import (
-	//	"log"
 	"errors"
 	"syscall/js"
 )
@@ -25,6 +24,10 @@ func newContext(canvas js.Value, ca *contextAttributes) (context js.Value, err e
 	}
 
 	gl := canvas.Call("getContext", "webgl2", attrs)
+
+	if !gl.Equal(js.Null()) {
+		return gl, nil
+	}
 
 	// if !gl.Equal(js.Null()) {
 	// 	//		ext := gl.Call("getExtension", "WEBGL_lose_context")
@@ -66,6 +69,7 @@ type contextAttributes struct {
 	FailIfMajorPerformanceCaveat    bool
 }
 
+// https://www.glfw.org/docs/3.3/window_guide.html
 func defaultAttributes() *contextAttributes {
 	return &contextAttributes{
 		Alpha:                 false,
