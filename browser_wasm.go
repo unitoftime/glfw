@@ -315,7 +315,7 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 	document.Call("addEventListener", "visibilitychange", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		// event := args[0]
 		state := document.Get("visibilityState").String()
-		fmt.Println("VISCHANGE:", state)
+		// fmt.Println("VISCHANGE:", state)
 
 		// If they are leaving the page, clear all the inputs
 		if state == "hidden" {
