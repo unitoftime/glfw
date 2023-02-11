@@ -365,11 +365,7 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 	*/
 
 	// Request first animation frame.
-	animationFrameCallback := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		animationFrameChan <- struct{}{}
-		return nil
-	})
-	js.Global().Call("requestAnimationFrame", animationFrameCallback)
+	// raf.Invoke(animationFrameCallback)
 
 	return w, nil
 }
@@ -592,18 +588,25 @@ func (w *Window) SwapBuffers() error {
 	// 	// return nil
 	// }
 
-	<-animationFrameChan
+	// <-animationFrameChan
+	// raf.Invoke(animationFrameCallback)
 
-	animationFrameCallback := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		animationFrameChan <- struct{}{}
-		return nil
-	})
-	js.Global().Call("requestAnimationFrame", animationFrameCallback)
+	raf.Invoke(animationFrameCallback)
+	<-animationFrameChan
 
 	return nil
 }
 
-var animationFrameChan = make(chan struct{}, 1)
+var raf = js.Global().Get("requestAnimationFrame")
+var animationFrameChan = make(chan struct{})
+var lastFrame float64
+var animationFrameCallback = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	newFrame := args[0].Float()
+	// fmt.Println(newFrame - lastFrame)
+	lastFrame = newFrame
+	animationFrameChan <- struct{}{}
+	return nil
+})
 
 func (w *Window) GetCursorPos() (x, y float64) {
 	return w.cursorPos[0], w.cursorPos[1]
