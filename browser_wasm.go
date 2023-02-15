@@ -285,9 +285,8 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 	htmlWindow.Call("addEventListener", "focus", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		// fmt.Println("FOCUS")
 		if w.focusCallback != nil {
-			// TODO - should this be in a goroutine?
 			inFocus := true
-			w.focusCallback(w, inFocus)
+			go w.focusCallback(w, inFocus)
 		}
 
 		return nil
@@ -303,9 +302,8 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 		// animationFrameChan <- struct{}{}
 
 		if w.focusCallback != nil {
-			// TODO - should this be in a goroutine?
 			inFocus := false
-			w.focusCallback(w, inFocus)
+			go w.focusCallback(w, inFocus)
 		}
 
 		return nil
@@ -603,10 +601,12 @@ var raf = js.Global().Get("requestAnimationFrame")
 var animationFrameChan = make(chan struct{})
 var lastFrame float64
 var animationFrameCallback = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-	newFrame := args[0].Float()
-	// fmt.Println(newFrame - lastFrame)
-	lastFrame = newFrame
-	animationFrameChan <- struct{}{}
+	go func() {
+		newFrame := args[0].Float()
+		// fmt.Println(newFrame - lastFrame)
+		lastFrame = newFrame
+		animationFrameChan <- struct{}{}
+	}()
 	return nil
 })
 
