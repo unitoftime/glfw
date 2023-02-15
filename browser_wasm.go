@@ -297,7 +297,6 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 		// fmt.Println("BLUR")
 
 		// Attempt to clear keys
-		w.justWentHidden = true
 		for key := range w.keys {
 			w.keys[key] = Release
 		}
@@ -320,7 +319,11 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 
 		// If they are leaving the page, clear all the inputs
 		if state == "hidden" {
-			w.justWentHidden = true
+			// Trigger another frame in case the RAF is blocked
+			time.AfterFunc(100 * time.Millisecond, func() {
+				animationFrameChan <- struct{}{}
+			})
+
 			w.hidden = true
 
 			// TODO - clear mouse input too?
@@ -406,7 +409,6 @@ type Window struct {
 	sizeCallback            SizeCallback
 	focusCallback           FocusCallback
 
-	justWentHidden bool // Used to track if the window just went hidden
 	hidden bool // Used to track if the window is hidden or visible
 
 	touches js.Value // Hacky mouse-emulation-via-touch.
@@ -575,14 +577,10 @@ func (w *Window) SetShouldClose(value bool) {
 }
 
 func (w *Window) SwapBuffers() error {
-	if w.justWentHidden {
-		w.justWentHidden = false
-	}
-
 	if w.hidden {
 		// Just to keep the game running in the background
-		// TODO - This doesn't appear to work on Chromium!
-		time.AfterFunc(10 * time.Millisecond, func() {
+		// TODO - arbitrarily selected 100 ms. Browsers will limit anyways
+		time.AfterFunc(100 * time.Millisecond, func() {
 			animationFrameChan <- struct{}{}
 		})
 	} else {
@@ -590,6 +588,13 @@ func (w *Window) SwapBuffers() error {
 	}
 
 	<-animationFrameChan
+
+	// raf.Invoke(animationFrameCallback)
+	// <-animationFrameChan
+
+	// Old
+	// <-animationFrameChan
+	// raf.Invoke(animationFrameCallback)
 
 	return nil
 }
