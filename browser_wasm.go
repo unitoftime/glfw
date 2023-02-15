@@ -9,6 +9,7 @@ import (
 	"log"
 	"runtime"
 	"syscall/js"
+	"time"
 )
 
 var htmlWindow = js.Global().Get("window")
@@ -577,21 +578,17 @@ func (w *Window) SwapBuffers() error {
 	if w.justWentHidden {
 		w.justWentHidden = false
 	}
+
 	if w.hidden {
-		return nil // Don't sync on RAF because we can't render anyways
+		// Just to keep the game running in the background
+		// TODO - This doesn't appear to work on Chromium!
+		time.AfterFunc(10 * time.Millisecond, func() {
+			animationFrameChan <- struct{}{}
+		})
+	} else {
+		raf.Invoke(animationFrameCallback)
 	}
-	// if w.justWentHidden {
-	// 	// TODO - maybe use settimeout to have code run really slowly?
-	// 	// fmt.Println("JUSTWENTHIDDEN")
-	// 	w.justWentHidden = false
-	// 	// animationFrameChan <- struct{}{}
-	// 	// return nil
-	// }
 
-	// <-animationFrameChan
-	// raf.Invoke(animationFrameCallback)
-
-	raf.Invoke(animationFrameCallback)
 	<-animationFrameChan
 
 	return nil
