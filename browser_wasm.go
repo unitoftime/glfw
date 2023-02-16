@@ -109,121 +109,132 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 	}
 
 	js.Global().Call("addEventListener", "resize", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		// HACK: Go fullscreen?
-		width := js.Global().Get("innerWidth").Int()
-		height := js.Global().Get("innerHeight").Int()
+		go func() {
+			// HACK: Go fullscreen?
+			width := js.Global().Get("innerWidth").Int()
+			height := js.Global().Get("innerHeight").Int()
 
-		w.devicePixelRatio = js.Global().Get("devicePixelRatio").Float()
-		// fmt.Println("w.devicePixelRatio", w.devicePixelRatio)
-		canvas.Set("width", int(float64(width)*devicePixelRatio+0.5))   // Nearest non-negative int.
-		canvas.Set("height", int(float64(height)*devicePixelRatio+0.5)) // Nearest non-negative int.
-		canvas.Get("style").Call("setProperty", "width", fmt.Sprintf("%vpx", width))
-		canvas.Get("style").Call("setProperty", "height", fmt.Sprintf("%vpx", height))
+			w.devicePixelRatio = js.Global().Get("devicePixelRatio").Float()
+			// fmt.Println("w.devicePixelRatio", w.devicePixelRatio)
+			canvas.Set("width", int(float64(width)*devicePixelRatio+0.5))   // Nearest non-negative int.
+			canvas.Set("height", int(float64(height)*devicePixelRatio+0.5)) // Nearest non-negative int.
+			canvas.Get("style").Call("setProperty", "width", fmt.Sprintf("%vpx", width))
+			canvas.Get("style").Call("setProperty", "height", fmt.Sprintf("%vpx", height))
 
-		if w.framebufferSizeCallback != nil {
-			// TODO: Callbacks may be blocking so they need to happen asyncronously. However,
-			//       GLFW API promises the callbacks will occur from one thread (i.e., sequentially), so may want to do that.
+			if w.framebufferSizeCallback != nil {
+				// TODO: Callbacks may be blocking so they need to happen asyncronously. However,
+				//       GLFW API promises the callbacks will occur from one thread (i.e., sequentially), so may want to do that.
 
-			go w.framebufferSizeCallback(w, w.canvas.Get("width").Int(), w.canvas.Get("height").Int())
-		}
-		if w.sizeCallback != nil {
-			boundingW, boundingH := w.GetSize()
-			go w.sizeCallback(w, boundingW, boundingH)
-		}
+				go w.framebufferSizeCallback(w, w.canvas.Get("width").Int(), w.canvas.Get("height").Int())
+			}
+			if w.sizeCallback != nil {
+				boundingW, boundingH := w.GetSize()
+				go w.sizeCallback(w, boundingW, boundingH)
+			}
+		}()
 		return nil
 	}))
 
 	document.Call("addEventListener", "keydown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		ke := args[0]
-		w.goFullscreenIfRequested()
+		go func() {
+			w.goFullscreenIfRequested()
 
-		action := Press
-		if ke.Get("repeat").Bool() {
-			action = Repeat
-		}
-
-		key := toKey(ke)
-
-		if key != KeyUnknown {
-			// Extend slice if needed.
-			neededSize := int(key) + 1
-			if neededSize > len(w.keys) {
-				w.keys = append(w.keys, make([]Action, neededSize-len(w.keys))...)
+			action := Press
+			if ke.Get("repeat").Bool() {
+				action = Repeat
 			}
-			w.keys[key] = action
-		}
 
-		if w.keyCallback != nil {
-			mods := toModifierKey(ke)
+			key := toKey(ke)
 
-			go w.keyCallback(w, key, -1, action, mods)
-		}
-
-		if w.charCallback != nil {
-			keyStr := ke.Get("key").String()
-			if len(keyStr) == 1 {
-				keyRune := []rune(keyStr)
-				go w.charCallback(w, keyRune[0])
+			if key != KeyUnknown {
+				// Extend slice if needed.
+				neededSize := int(key) + 1
+				if neededSize > len(w.keys) {
+					w.keys = append(w.keys, make([]Action, neededSize-len(w.keys))...)
+				}
+				w.keys[key] = action
 			}
-		}
+
+			if w.keyCallback != nil {
+				mods := toModifierKey(ke)
+
+				go w.keyCallback(w, key, -1, action, mods)
+			}
+
+			if w.charCallback != nil {
+				keyStr := ke.Get("key").String()
+				if len(keyStr) == 1 {
+					keyRune := []rune(keyStr)
+					go w.charCallback(w, keyRune[0])
+				}
+			}
+		}()
 
 		ke.Call("preventDefault")
 		return nil
 	}))
 	document.Call("addEventListener", "keyup", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		ke := args[0]
-		w.goFullscreenIfRequested()
 
-		key := toKey(ke)
+		go func() {
+			w.goFullscreenIfRequested()
 
-		if key != KeyUnknown {
-			// Extend slice if needed.
-			neededSize := int(key) + 1
-			if neededSize > len(w.keys) {
-				w.keys = append(w.keys, make([]Action, neededSize-len(w.keys))...)
+			key := toKey(ke)
+
+			if key != KeyUnknown {
+				// Extend slice if needed.
+				neededSize := int(key) + 1
+				if neededSize > len(w.keys) {
+					w.keys = append(w.keys, make([]Action, neededSize-len(w.keys))...)
+				}
+				w.keys[key] = Release
 			}
-			w.keys[key] = Release
-		}
 
-		if w.keyCallback != nil {
-			mods := toModifierKey(ke)
+			if w.keyCallback != nil {
+				mods := toModifierKey(ke)
 
-			go w.keyCallback(w, key, -1, Release, mods)
-		}
+				go w.keyCallback(w, key, -1, Release, mods)
+			}
+		}()
 
 		ke.Call("preventDefault")
 		return nil
 	}))
 	document.Call("addEventListener", "mousedown", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		me := args[0]
-		w.goFullscreenIfRequested()
+		go func() {
+			w.goFullscreenIfRequested()
 
-		button := me.Get("button").Int()
-		if !(button >= 0 && button <= 2) {
-			return nil
-		}
+			button := me.Get("button").Int()
+			if !(button >= 0 && button <= 2) {
+				return
+			}
 
-		w.mouseButton[button] = Press
-		if w.mouseButtonCallback != nil {
-			go w.mouseButtonCallback(w, MouseButton(button), Press, 0)
-		}
+			w.mouseButton[button] = Press
+			if w.mouseButtonCallback != nil {
+				go w.mouseButtonCallback(w, MouseButton(button), Press, 0)
+			}
+		}()
 
 		me.Call("preventDefault")
 		return nil
 	}))
 	document.Call("addEventListener", "mouseup", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		me := args[0]
-		w.goFullscreenIfRequested()
+		go func() {
+			w.goFullscreenIfRequested()
 
-		button := me.Get("button").Int()
-		if !(button >= 0 && button <= 2) {
-			return nil
-		}
+			button := me.Get("button").Int()
+			if !(button >= 0 && button <= 2) {
+				return
+			}
 
-		w.mouseButton[button] = Release
-		if w.mouseButtonCallback != nil {
-			go w.mouseButtonCallback(w, MouseButton(button), Release, 0)
-		}
+			w.mouseButton[button] = Release
+			if w.mouseButtonCallback != nil {
+				go w.mouseButtonCallback(w, MouseButton(button), Release, 0)
+			}
+		}()
 
 		me.Call("preventDefault")
 		return nil
@@ -236,33 +247,35 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 
 	document.Call("addEventListener", "mousemove", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		me := args[0]
-		var movementX, movementY float64
-		if !w.missing.pointerLock {
-			movementX = me.Get("movementX").Float()
-			movementY = me.Get("movementY").Float()
-		} else {
-			movementX = me.Get("clientX").Float() - w.cursorPos[0]
-			movementY = me.Get("clientY").Float() - w.cursorPos[1]
-		}
+		go func() {
+			var movementX, movementY float64
+			if !w.missing.pointerLock {
+				movementX = me.Get("movementX").Float()
+				movementY = me.Get("movementY").Float()
+			} else {
+				movementX = me.Get("clientX").Float() - w.cursorPos[0]
+				movementY = me.Get("clientY").Float() - w.cursorPos[1]
+			}
 
-		w.cursorPos[0], w.cursorPos[1] = me.Get("clientX").Float(), me.Get("clientY").Float()
-		if w.cursorPosCallback != nil {
-			go w.cursorPosCallback(w, w.cursorPos[0], w.cursorPos[1])
-		}
-		if w.mouseMovementCallback != nil {
-			go w.mouseMovementCallback(w, w.cursorPos[0], w.cursorPos[1], movementX, movementY)
-		}
+			w.cursorPos[0], w.cursorPos[1] = me.Get("clientX").Float(), me.Get("clientY").Float()
+			if w.cursorPosCallback != nil {
+				go w.cursorPosCallback(w, w.cursorPos[0], w.cursorPos[1])
+			}
+			if w.mouseMovementCallback != nil {
+				go w.mouseMovementCallback(w, w.cursorPos[0], w.cursorPos[1], movementX, movementY)
+			}
+		}()
 		me.Call("preventDefault")
 		return nil
 	}))
 	document.Call("addEventListener", "wheel", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		we := args[0]
+		go func() {
+			deltaX := we.Get("deltaX").Float()
+			deltaY := we.Get("deltaY").Float()
 
-		deltaX := we.Get("deltaX").Float()
-		deltaY := we.Get("deltaY").Float()
-
-		var multiplier float64
-		/*
+			var multiplier float64
+			/*
 			switch we.DeltaMode {
 			case dom.DeltaPixel:
 				multiplier = 0.1
@@ -272,11 +285,12 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 				log.Println("unsupported WheelEvent.DeltaMode:", we.DeltaMode)
 				multiplier = 1
 			}*/
-		multiplier = 1
+			multiplier = 1
 
-		if w.scrollCallback != nil {
-			go w.scrollCallback(w, -deltaX*multiplier, -deltaY*multiplier)
-		}
+			if w.scrollCallback != nil {
+				go w.scrollCallback(w, -deltaX*multiplier, -deltaY*multiplier)
+			}
+		}()
 
 		we.Call("preventDefault")
 		return nil
@@ -293,45 +307,49 @@ func CreateWindow(_, _ int, title string, monitor *Monitor, share *Window) (*Win
 	}))
 
 	htmlWindow.Call("addEventListener", "blur", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		// fmt.Println("BLUR")
+		go func() {
+			// fmt.Println("BLUR")
 
-		// Attempt to clear keys
-		for key := range w.keys {
-			w.keys[key] = Release
-		}
-		// animationFrameChan <- struct{}{}
+			// Attempt to clear keys
+			for key := range w.keys {
+				w.keys[key] = Release
+			}
+			// animationFrameChan <- struct{}{}
 
-		if w.focusCallback != nil {
-			inFocus := false
-			go w.focusCallback(w, inFocus)
-		}
+			if w.focusCallback != nil {
+				inFocus := false
+				go w.focusCallback(w, inFocus)
+			}
+		}()
 
 		return nil
 	}))
 
 	// Detect window losing focus: https://developer.mozilla.org/en-US/docs/Web/API/Document/visibilitychange_event
 	document.Call("addEventListener", "visibilitychange", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		// event := args[0]
-		state := document.Get("visibilityState").String()
-		// fmt.Println("VISCHANGE:", state)
+		go func() {
+			// event := args[0]
+			state := document.Get("visibilityState").String()
+			// fmt.Println("VISCHANGE:", state)
 
-		// If they are leaving the page, clear all the inputs
-		if state == "hidden" {
-			// Trigger another frame in case the RAF is blocked
-			time.AfterFunc(100 * time.Millisecond, func() {
-				animationFrameChan <- struct{}{}
-			})
+			// If they are leaving the page, clear all the inputs
+			if state == "hidden" {
+				// Trigger another frame in case the RAF is blocked
+				time.AfterFunc(100 * time.Millisecond, func() {
+					animationFrameChan <- struct{}{}
+				})
 
-			w.hidden = true
+				w.hidden = true
 
-			// TODO - clear mouse input too?
-			for key := range w.keys {
-				w.keys[key] = Release
+				// TODO - clear mouse input too?
+				for key := range w.keys {
+					w.keys[key] = Release
+				}
+				// animationFrameChan <- struct{}{}
+			} else if state == "visible" {
+				w.hidden = false
 			}
-			// animationFrameChan <- struct{}{}
-		} else if state == "visible" {
-			w.hidden = false
-		}
+		}()
 		return nil
 	}))
 
@@ -601,12 +619,17 @@ var raf = js.Global().Get("requestAnimationFrame")
 var animationFrameChan = make(chan struct{})
 var lastFrame float64
 var animationFrameCallback = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-	go func() {
-		newFrame := args[0].Float()
-		// fmt.Println(newFrame - lastFrame)
-		lastFrame = newFrame
-		animationFrameChan <- struct{}{}
-	}()
+	// go func() {
+	// 	newFrame := args[0].Float()
+	// 	// fmt.Println(newFrame - lastFrame)
+	// 	lastFrame = newFrame
+	// 	animationFrameChan <- struct{}{}
+	// }()
+
+	newFrame := args[0].Float()
+	// fmt.Println(newFrame - lastFrame)
+	lastFrame = newFrame
+	animationFrameChan <- struct{}{}
 	return nil
 })
 
